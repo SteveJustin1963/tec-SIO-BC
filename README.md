@@ -20,3 +20,6 @@ After a bit of research, I came up with this and it works great. Here are the de
 I have a couple of spare boards and could send them to anyone interested.
 
 I have other projects going and will post later when they are done.
+
+![](https://github.com/SteveJustin1963/tec-SIO-BC/blob/master/docs/cct.jpg)
+![](https://github.com/SteveJustin1963/tec-SIO-BC/blob/master/docs/pcb.jpg)
