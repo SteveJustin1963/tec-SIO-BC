@@ -5,7 +5,7 @@ Břīåñ CHIHД
 
 https://www.facebook.com/photo.php?fbid=10159860909909056&set=pcb.853869295122121&type=3&theater&ifg=1
 
-New Member · 8 hrs
+New Member · 8 hrs 5/5/2020
 First time post.... I recently built a TEC-1D and got hold of a couple of Z80 SIO chips. I decided to get this chip connected to the TEC so I can transfer code to and from my computer. Also, do away with NVRam etc..
 After a bit of research, I came up with this and it works great. Here are the details:
 -- Using a clock speed of 3.6864 MHz which divides by 64 to get 57600 baud
