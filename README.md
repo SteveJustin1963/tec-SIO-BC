@@ -1,7 +1,10 @@
 # tec-SIO-BC
 Serial thru SIO by Břīåñ CHIHД
 
-Břīåñ CHIHД
+Břīåñ CHIHД   
+
+https://www.facebook.com/photo.php?fbid=10159860909909056&set=pcb.853869295122121&type=3&theater&ifg=1
+
 New Member · 8 hrs
 First time post.... I recently built a TEC-1D and got hold of a couple of Z80 SIO chips. I decided to get this chip connected to the TEC so I can transfer code to and from my computer. Also, do away with NVRam etc..
 After a bit of research, I came up with this and it works great. Here are the details:
