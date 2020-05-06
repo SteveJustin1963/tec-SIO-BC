@@ -100,7 +100,7 @@ CTLTBL:
         DB 00010100b    ; write into WR0: select WR4 / Reset Int 
         DB 11000100b    ; write into WR4: presc. 64x, 1 stop bit, no parity
         DB 00010011b    ; write into WR0: select WR3 / Reset Int 
-        DB 1110000lb    ; write into WR3: 8 bits/RX char ; auto enable ON; RX enable
+        DB 11100001b    ; write into WR3: 8 bits/RX char ; auto enable ON; RX enable
         DB 00010101b    ; write into WR0: select WR5 / Reset Int
         DB 01101000b    ; write into WR5: TX 8 bits, BREAK off, TX Enable 
         DB 00010001b    ; write into WR0: select WR1 / Reset Int 
