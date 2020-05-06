@@ -1,0 +1,188 @@
+0000                             ; SIO to TTY USB polling attempt  
+0000                             ; Uses JMON Menu and Perimeter to select read/send and  
+0000                             ; to save Buffer and Length variable  
+0000                             ; these are store ad 0898-99, 089A-9B 
+0000                             ; 
+0000                             ; Port 7 on TEC is connected to CE 
+0000                             ; A5 is connected to C/D, and A4 is connected to A/B  
+0000                SIO_DA:   EQU   00000111B   
+0000                SIO_CA:   EQU   00100111B   ; A5 is CID, and A4 is A/B  
+0000                SIO_DB:   EQU   00010111B   
+0000                SIO_CB:   EQU   00110111B   ; A5 is C/D, and A4 is A/6 
+0000                             ; 
+0E00                          .ORG   0E00H   
+0E00                             ; Set up Menu to select READ/SEND  
+0E00                             ; Set up Perimeter to Buffer/Length 
+0E00                             ; 
+0E00                SIO_TRANSFER:      
+0E00   21 6E 0E               LD   HL,M_DATA   ; Perimter data  
+0E03   11 80 08               LD   DE,0880H   ; Destination for menu/perimeter to use 
+0E06   01 18 00               LD   BC,0018H   ; Number of bytes to copy 
+0E09   ED B0                  LDIR      ; Copy it
+0E0B   C3 41 00               JP   0041H   ; Call the menu 
+0E0E                             ; 
+0E0E                UPLOAD_SEL:      
+0E0E   21 33 0E               LD   HL,SEND_TO_USB   ; Store upload start address 
+0E11   C3 17 0E               JP   CALL_PERM   ; Call Perimter to get Buffer/Length 
+0E14                             ; 
+0E14                DOWNLOAD_SEL:      
+0E14   21 1D 0E               LD   HL,READ_FROM_USB   ; Store download start address 
+0E17                             ; 
+0E17                CALL_PERM:      
+0E17   22 88 08               LD   (0888H),HL   ; Into 0x0888 (Perimeter Call) 
+0E1A   C3 44 00               JP   0044H   ; Call the perimeter to get Buffer/Length 
+0E1D                             ; Receive data from USB, 
+0E1D                             ; Store data in HL address be BC bytes  
+0E1D                             ; 
+0E1D                READ_FROM_USB:      
+0E1D   CD 49 0E               CALL   INIT_SIO   ; Read in data from USB
+0E20                             ; 
+0E20                READ:        
+0E20   AF                     XOR   a   ; Load A with RRO  
+0E21   D3 27                  OUT   (SIO_CA),a   ; Select RRO 
+0E23   DB 27                  IN   a,(SIO_CA)   ; Read RRO  
+0E25   CB 47                  BIT   0,a   ; Check bit 0, RX Character Available 
+0E27   28 F7                  JR   Z,READ   ; If nothing, check again  
+0E29   DB 07                  IN   a,(SIO_DA)   ; Read SIO  
+0E2B   77                     LD   (HL),a   ; Load A into HL  
+0E2C   23                     INC   HL   ; move HL to next location 
+0E2D   0B                     DEC   BC   ; Decrease BC   
+0E2E   78                     LD   a,b   ; load a with b  
+0E2F   B1                     OR   c   ; or with c  
+0E30   20 EE                  JR   NZ,READ   ; if not zero then read again 
+0E32   C7                     RST   00   
+0E33                             ; Send data to USB  
+0E33                             ; Start at address HL for BC bytes 
+0E33                             ; 
+0E33                SEND_TO_USB:      
+0E33   CD 49 0E               CALL   INIT_SIO   
+0E36                             ; 
+0E36                SEND:        ; Send data to USB 
+0E36                             ;B = hb, C = lb 
+0E36   7E                     LD   a,(HL)   ; load HL to a 
+0E37   D3 07                  OUT   (SIO_DA),a   ; Send it out! 
+0E39                             ; 
+0E39                CHECKSENT:      
+0E39   AF                     XOR   a   ; Load A with RRO 
+0E3A   D3 27                  OUT   (SIO_CA),a   ; Select RRO 
+0E3C   DB 27                  IN   a,(SIO_CA)   ; Read RRO
+0E3E   CB 57                  BIT   2,a   ; Check if TX buf is empty
+0E40   28 F7                  JR   Z,CHECKSENT   ; Wait until buffer is empty 
+0E42   23                     INC   HL   
+0E43   0B                     DEC   BC   ; Decrease BC 
+0E44   78                     LD   a,b   ; load a with b 
+0E45   B1                     OR   c   ; or with c
+0E46   20 EE                  JR   NZ,SEND   ; if not zero then read again 
+0E48   C7                     RST   00   
+0E49                             ; 
+0E49                INIT_SIO:      
+0E49   21 62 0E               LD   HL,CTLTBL   ; Setup data 
+0E4C   CD 57 0E               CALL   IPORTS   ; Setup the SIO 
+0E4F   2A 98 08               LD   HL,(0898H)   ; Buffer Location (From Perimeter)  
+0E52   ED 4B 9A 08            LD   BC,(089AH)   ; Length Location (From Perimeter)  
+0E56   C9                     RET      
+0E57                             ; 
+0E57                IPORTS:      ; Initialize the SIO, requires Bites, Port and Data 
+0E57   7E                     LD   a,(HL)   ; Load Control Table (Bytes) 
+0E58   B7                     OR   a   ; Test for zero
+0E59   C8                     RET   Z   ; Return if zero
+0E5A   47                     LD   b,a   ; Save bites in B
+0E5B   23                     INC   HL   ; Go to Port address 
+0E5C   4E                     LD   c,(HL)   ; Load C with port address 
+0E5D   23                     INC   HL   ; Go to Data 
+0E5E   ED B3                  OTIR      ; Output HL data, B times, to port C 
+0E60   18 F5                  JR   IPORTS   ; Jump to the next port
+0E62                             ; 
+0E62                CTLTBL:      
+0E62   09                     DB   09H   ; 9 Lines
+0E63   27                     DB   SIO_CA   ; Port Number
+0E64   18                     DB   00011000b   ; write into WR0: channel reset 
+0E65   14                     DB   00010100b   ; write into WR0: select WR4 / Reset Int 
+0E66   C4                     DB   11000100b   ; write into WR4: presc. 64x, 1 stop bit, no parity
+0E67   13                     DB   00010011b   ; write into WR0: select WR3 / Reset Int 
+0E68   E1                     DB   11100001b   ; write into WR3: 8 bits/RX char ; auto enable ON; RX enable
+0E69   15                     DB   00010101b   ; write into WR0: select WR5 / Reset Int
+0E6A   68                     DB   01101000b   ; write into WR5: TX 8 bits, BREAK off, TX Enable 
+0E6B   11                     DB   00010001b   ; write into WR0: select WR1 / Reset Int 
+0E6C   00                     DB   00000000b   ; write into WR1: disable all interrupts 
+0E6D   00                     DB   0H   
+0E6E                             ; 
+0E6E                M_DATA:      ; Perimdter Setup  
+0E6E   FF FF                  DB   0xFF,0xFF   ; Blank  
+0E70   84 0E                  DW   PERM_DA_TBL   ; LED display for data, 2 bytes each  
+0E72   99 08                  DB   0x99,0x08   ; Store keyed info here at 0x0898  
+0E74   00 01                  DB   0x00,0x01   ; Number of perimeter items, =2  
+0E76   FF FF                  DB   0xFF,0xFF   ; Function to call when GO Pressed (filled in by menu) 
+0E78   FF FF FF               DB   0xFF,0xFF,0xFF   ; Blank 
+0E7B                             ; Menu Setup  
+0E7B   FF FF                  DB   0xFF,0xFF   ; Blank  
+0E7D   00 01                  DB   0x00,0x01   ; Number of menu items, = 2  
+0E7F   88 0E                  DW   MENU_JP_TBL   ; Jump table for menu items 
+0E81   8E                     DB   MENU_AD_TBL   ; Menu Address LED display table 
+0E82   96 0E                  DW   MENU_DA_TBL   ; menu Data LED display table  DB OxC9 ; return (unused) 
+0E84                             ; 
+0E84                PERM_DA_TBL:      ; Perimter Display for DATA LED
+0E84   6F EC                  DB   0x6F,0xEC   ; "Ad" Address
+0E86   C2 C7                  DB   0xC2,0xC7   ; "LE" Length 
+0E88                             ; 
+0E88                MENU_JP_TBL:      ; Menu Jump table 
+0E88   C3 0E 0E               JP   UPLOAD_SEL   ; Jump to upload trom TEC to USB 
+0E8B   C3 14 0E               JP   DOWNLOAD_SEL   ; Jump to download from USB to TEC 
+0E8E                             ; 
+0E8E                MENU_AD_TBL:      ; Menu Display for ADDRESS LEDs 
+0E8E   EA 4F C2 EB            DB   0xEA,0x4F,0xC2,0xEB   ; "UpLO"  
+0E92   EC EB E1 64            DB   0xEC,0xEB,0XE1,0x64   ; "dOWn" 
+0E96                             ; 
+0E96                MENU_DA_TBL:      ; Menu Display for DATA LEDs
+0E96   6F EC                  DB   0x6F,0xEC   ; "Ad"
+0E98   C2 EC                  DB   0xC2,0xEC   ; "Ld" 
+0E9A                             ; 
+
+
+SIO_DA:             0007 DEFINED AT LINE 8
+                    > USED AT LINE 46
+                    > USED AT LINE 63
+SIO_CA:             0027 DEFINED AT LINE 9
+                    > USED AT LINE 42
+                    > USED AT LINE 43
+                    > USED AT LINE 67
+                    > USED AT LINE 68
+                    > USED AT LINE 98
+SIO_DB:             0017 DEFINED AT LINE 10
+SIO_CB:             0037 DEFINED AT LINE 11
+SIO_TRANSFER:       0E00 DEFINED AT LINE 17
+UPLOAD_SEL:         0E0E DEFINED AT LINE 24
+                    > USED AT LINE 129
+DOWNLOAD_SEL:       0E14 DEFINED AT LINE 28
+                    > USED AT LINE 130
+CALL_PERM:          0E17 DEFINED AT LINE 31
+                    > USED AT LINE 26
+READ_FROM_USB:      0E1D DEFINED AT LINE 37
+                    > USED AT LINE 29
+READ:               0E20 DEFINED AT LINE 40
+                    > USED AT LINE 45
+                    > USED AT LINE 52
+SEND_TO_USB:        0E33 DEFINED AT LINE 57
+                    > USED AT LINE 25
+SEND:               0E36 DEFINED AT LINE 60
+                    > USED AT LINE 75
+CHECKSENT:          0E39 DEFINED AT LINE 65
+                    > USED AT LINE 70
+INIT_SIO:           0E49 DEFINED AT LINE 78
+                    > USED AT LINE 38
+                    > USED AT LINE 58
+IPORTS:             0E57 DEFINED AT LINE 85
+                    > USED AT LINE 80
+                    > USED AT LINE 94
+CTLTBL:             0E62 DEFINED AT LINE 96
+                    > USED AT LINE 79
+M_DATA:             0E6E DEFINED AT LINE 110
+                    > USED AT LINE 18
+PERM_DA_TBL:        0E84 DEFINED AT LINE 124
+                    > USED AT LINE 112
+MENU_JP_TBL:        0E88 DEFINED AT LINE 128
+                    > USED AT LINE 120
+MENU_AD_TBL:        0E8E DEFINED AT LINE 132
+                    > USED AT LINE 121
+MENU_DA_TBL:        0E96 DEFINED AT LINE 136
+                    > USED AT LINE 122
