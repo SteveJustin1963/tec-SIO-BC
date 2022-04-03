@@ -9,12 +9,12 @@ Serial thru SIO by Břīåñ CHIHД
 - After a bit of research, I came up with this and it works great. Here are the details:
 - Using a clock speed of 3.6864 MHz which divides by 64 to get 57600 baud
 - Using IO Port 7 for Chip Enabled 
-* and A4,A5 for Data/Control 
-* and A/B SIO ports. 
-- 
-Using A4-5 doesn't mess with the TEC A0-2 and I can do something similar to the LCD output for control and data. 
+- and A4,A5 for Data/Control 
+- and A/B SIO ports. 
+- Using A4-5 doesn't mess with the TEC A0-2 
+- and I can do something similar to the LCD output for control and data. 
 
-IE: OUT(27),a and OUT(07),a
+`IE: OUT(27),a and OUT(07),a`
 
 * Using a USB to FTDI adaptor ($2.28 from AliExpress)
 * Added some D-Flip Flops and jumpers to divide the clock to 28800 and 14400 baud. (Acually haven't tested this yet)
