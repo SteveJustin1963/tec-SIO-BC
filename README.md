@@ -19,13 +19,11 @@ Serial thru SIO by Břīåñ CHIHД
 * Using a USB to FTDI adaptor ($2.28 from AliExpress)
 * Added some D-Flip Flops and jumpers to divide the clock to 28800 and 14400 baud. (Acually haven't tested this yet)
 * Using Coolterm as my serial terminal which can send and capture files.
-* Didn't use IM 2 but could have. I only run the code when I need to transfer, Its not like the TEC is doing something else during transfer.
-* I use JMON's Menu to select the transfer type and the Perimeter to select start address and length. If not using JMON then code can be called directly.
+* Didn't use IM 2 but could have. 
+* I only run the code when I need to transfer, Its not like the TEC is doing something else during transfer.
+* I use JMON's Menu to select the transfer type and the Perimeter to select start address and length. 
+* If not using JMON then code can be called directly.
 * All pins needed are through headers on the TEC-1D except IORQ which I wire from under the board.
-
-I have a couple of spare boards and could send them to anyone interested.
-
-I have other projects going and will post later when they are done.
 
 ![](https://github.com/SteveJustin1963/tec-SIO-BC/blob/master/docs/cct.jpg)
 ![](https://github.com/SteveJustin1963/tec-SIO-BC/blob/master/docs/pcb.jpg)
